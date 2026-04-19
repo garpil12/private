@@ -1935,10 +1935,10 @@ def restore_cmd(update, context):
     except Exception as e:
         update.message.reply_text(f"❌ restore gagal\n{e}")
 
+    
 # ================= MAIN =================
 def main():
     global bot
-    print("🔥 MASUK MAIN")
 
     updater = Updater(
         TOKEN,
@@ -1951,19 +1951,19 @@ def main():
 
     bot = updater.bot
 
+    # 🔥 LOAD DATA
+    load_autotag()
+
     # 🔥 DATABASE
-    print("📦 INIT DATABASE")
     database99.start_database_system(bot)
 
     dp = updater.dispatcher
 
     # ================= COMMAND =================
-    print("⚙️ REGISTER COMMAND")
     dp.add_handler(CommandHandler("restore", restore_cmd))
     dp.add_handler(CommandHandler("start", start_cmd))
     dp.add_handler(CommandHandler("help", help_owner))
-    dp.add_handler(CommandHandler("addlivechat", add_livechat))
-    dp.add_handler(CommandHandler("dellivechat", del_livechat))
+
     dp.add_handler(CommandHandler("addpartner", add_partner))
     dp.add_handler(CommandHandler("delpartner", del_partner))
     dp.add_handler(CommandHandler("listpartner", list_partner))
@@ -1976,16 +1976,18 @@ def main():
     dp.add_handler(CommandHandler("off", off_cmd))
     dp.add_handler(CommandHandler("on", on_cmd))
     dp.add_handler(CommandHandler("bc", bc_cmd))
-    dp.add_handler(CommandHandler("absen", absen_cmd))
-    dp.add_handler(CallbackQueryHandler(absen_button, pattern="^absen_"))
 
-    # 🔥 TAGALL
+    # 🔥 TAGALL MANUAL
     dp.add_handler(CommandHandler("tagall", tagall_cmd))
     dp.add_handler(CommandHandler("cancel", cancel_cmd))
     dp.add_handler(CommandHandler("addbuttontag", addbuttontag_cmd))
 
     # ================= CALLBACK =================
+
+    # 🔥 MANUAL TAG
     dp.add_handler(CallbackQueryHandler(handle_durasi, pattern="^manualdur_"))
+
+    # 🔥 HANDLER LAIN (PALING BAWAH)
     dp.add_handler(CallbackQueryHandler(button_handler))
 
     # ================= PRIVATE =================
@@ -1996,58 +1998,41 @@ def main():
         )
     )
 
-    # ❌ JANGAN ADA TELETHON DI SINI
+    # ================= TELETHON =================
+    client.start()
+    print("✅ Telethon nyala")
 
     # ================= WORKER =================
-    print("🔥 START WORKER")
-    threading.Thread(target=tagall_worker, daemon=True).start()
+    worker_thread = threading.Thread(target=tagall_worker)
+    worker_thread.daemon = True
+    worker_thread.start()
+    print("🔥 WORKER TAGALL STARTED")
 
-    print("⏳ START RESET LIMIT")
-    threading.Thread(target=reset_limit_daily, daemon=True).start()
+    # ================= AUTO TAG WORKER =================
+    auto_thread = threading.Thread(
+        target=auto_tag_worker,
+        args=(updater.bot,),
+        daemon=True
+    )
+    auto_thread.start()
+    print("⏰ AUTO TAG WORKER STARTED")
 
-    # ================= START BOT =================
-    print("🚀 START POLLING")
+    # ================= RESET LIMIT =================
+    reset_thread = threading.Thread(target=reset_limit_daily)
+    reset_thread.daemon = True
+    reset_thread.start()
+
+    # ================= START =================
     updater.start_polling(
         poll_interval=2.3,
         timeout=20,
         drop_pending_updates=True
     )
 
-    print("✅ BOT RUNNING")
+    print("🚀 BOT RUNNING...")
     updater.idle()
-
-# ================= TELETHON THREAD =================
-def run_telethon():
-    print("⚡ START TELETHON THREAD")
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    try:
-        # start telethon (SYNC aja cukup)
-        client.start()
-        print("✅ Telethon nyala (TAGALL)")
-
-        # ❌ JANGAN ADA register_absen(client)
-
-        loop.run_until_complete(client.run_until_disconnected())
-
-    except Exception as e:
-        print("❌ TELETHON ERROR:", e)
-        import traceback
-        traceback.print_exc()
 
 
 # ================= RUN =================
 if __name__ == "__main__":
-    try:
-        # 🔥 Telethon buat tagall
-        threading.Thread(target=run_telethon, daemon=True).start()
-
-        # 🔥 Bot utama (token)
-        main()
-
-    except Exception as e:
-        print("❌ ERROR:", e)
-        import traceback
-        traceback.print_exc()
+    main()
