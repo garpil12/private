@@ -26,7 +26,7 @@ Berikut penjelasan fitur yang tersedia 👇
 📊 /rekab [nama]
 ➜ Rekap jobdast TMO
 Contoh:
-/rekab HYPERION https://t.me/officialhyperion
+   /rekab HYPERION https://t.me/officialhyperion
 
 📄 /getjobdast
 ➜ Menampilkan pilihan Jobdesk TMO
@@ -63,7 +63,7 @@ Contoh:
 """
 
     keyboard = [
-        [InlineKeyboardButton("🛒 STORE - @storegarf", url="https://t.me/storegarf")]
+        [InlineKeyboardButton("🛍️ MY STORE", url="https://t.me/storegarf")]
     ]
 
     update.message.reply_photo(
